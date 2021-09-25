@@ -1,37 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './PostsList.scss';
 
-export const PostsList: React.FC = () => (
-  <div className="PostsList">
-    <h2>Posts:</h2>
+import { loadPosts, getUserPosts } from '../../api/posts';
 
-    <ul className="PostsList__list">
-      <li className="PostsList__item">
-        <div>
-          <b>[User #1]: </b>
-          sunt aut facere repellat provident occaecati excepturi optio
-        </div>
-        <button
-          type="button"
-          className="PostsList__button button"
-        >
-          Close
-        </button>
-      </li>
+interface Props {
+  selectedUserId: number;
+}
 
-      <li className="PostsList__item">
-        <div>
-          <b>[User #2]: </b>
-          et ea vero quia laudantium autem
-        </div>
+export const PostsList: React.FC<Props> = (props) => {
+  const { selectedUserId } = props;
+  const [posts, setPosts] = useState<Post[]>([]);
 
-        <button
-          type="button"
-          className="PostsList__button button"
-        >
-          Open
-        </button>
-      </li>
-    </ul>
-  </div>
-);
+  useEffect(() => {
+    (async () => {
+      if (!selectedUserId) {
+        const postsFromAPI = await loadPosts();
+
+        setPosts(postsFromAPI);
+
+        return;
+      }
+
+      const userPostsFromAPI = await getUserPosts(selectedUserId);
+
+      setPosts(userPostsFromAPI);
+    })();
+  }, [selectedUserId]);
+
+  return (
+    <div className="PostsList">
+      <h2>Posts:</h2>
+
+      <ul className="PostsList__list">
+        {posts.length && (
+          posts.map((post) => (
+            <li
+              key={post.id}
+              className="PostsList__item"
+            >
+              <div>
+                <b>{`[User #${post.userId}]: `}</b>
+                {post.title}
+              </div>
+              <button
+                type="button"
+                className="PostsList__button button"
+              >
+                Close
+              </button>
+            </li>
+          ))
+        )}
+        <li className="PostsList__item">
+          <div>
+            <b>[User #2]: </b>
+            et ea vero quia laudantium autem
+          </div>
+
+          <button
+            type="button"
+            className="PostsList__button button"
+          >
+            Open
+          </button>
+        </li>
+      </ul>
+    </div>
+  );
+};
